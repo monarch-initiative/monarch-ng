@@ -1,0 +1,49 @@
+@import "~bootstrap/less/bootstrap.less";
+@import "../spacelab/bootswatch.less";
+@import "../spacelab/variables.less";
+@body-bg: #e0ebeb;
+
+
+.btn.btn-bigfont {
+  font-weight:500;
+  font-size:1.1em;
+  line-height:1.0em;
+}
+
+.json-formatter-row {
+  font-size:0.98em !important;
+  border-top:1px dotted lightgray;
+  border-left:1px solid lightgray;
+  padding:0;
+  margin:1px;
+}
+
+.row.row-bottom {
+	position:relative;
+	margin:10px 0 0 0;
+  padding:0;
+	bottom:0;
+	width:100%;
+}
+
+button.navbar-image {
+  background-color: transparent;
+  background-image: url(titledlogo.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: @navbar-height;
+  width: @navbar-height * 2;
+  opacity:1.0;
+  border: none;
+}
+
+// Navbar collapse
+//** Point at which the navbar becomes uncollapsed.
+@grid-float-breakpoint:     @screen-sm-min;
+//** Point at which the navbar begins collapsing.
+@grid-float-breakpoint-max: (@grid-float-breakpoint - 1);
+
+@grid-float-breakpoint:   570px;
+@grid-float-breakpoint-max: (@grid-float-breakpoint - 1);
+@navbar-height:           30px;
+@font-size-base:          14px;

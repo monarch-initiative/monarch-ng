@@ -1,0 +1,13 @@
+{
+  "colours": true,
+  "restartable": "rs",
+  "verbose": false,
+  "ignore": [
+    "ui/"
+  ],
+  "watch": [
+    "server/",
+    "package.json"
+  ],
+  "ext": "js json"
+}

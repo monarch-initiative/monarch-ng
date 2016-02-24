@@ -1,0 +1,164 @@
+<div
+  id="scigraph"
+  class="container-fluid scigraph-container"
+  ng-controller="SciGraphController as scigraph">
+
+  <div class="row">
+    <div class="col-xs-offset-2 col-xs-8">
+      <h4>
+        <a
+          target="_blank"
+          href="http://scigraph-ontology.monarchinitiative.org/scigraph/docs/">SciGraph Experiments
+        </a>
+      </h4>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-6">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <button type="button"
+            class="pull-right btn btn-xs btn-default btn-bigfont"
+            ng-click="scigraph.getRelationshipTypes()">
+            <i class="fa fa-refresh"></i>
+          </button>
+
+          <h6 class="panel-title">SciGraph Relationships</h6>
+        </div>
+
+        <div class="panel-body pre-scrollable">
+          <ul class="list-group" scroll="scigraph.relationshipTypes">
+            <li class="list-group-item list-group-item-tiny"
+              ng-repeat="(k, v) in scigraph.relationshipTypes track by $index">
+              <h6>{{v.name}} ({{v.count}})</h6>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-12 col-sm-6">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <button type="button"
+            class="pull-right btn btn-xs btn-default btn-bigfont"
+            ng-click="scigraph.getProperties()">
+            <i class="fa fa-refresh"></i>
+          </button>
+
+          <h6 class="panel-title">SciGraph Properties</h6>
+        </div>
+
+        <div class="panel-body pre-scrollable">
+          <ul class="list-group" scroll="scigraph.properties">
+            <li class="list-group-item list-group-item-tiny" ng-repeat="p in scigraph.properties track by $index">
+              <h6>{{p}}</h6>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="row">
+
+    <div class="col-xs-12">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h6
+            class="panel-title">
+            Neighborhood of
+            <a
+              target="_blank"
+              href="http://scigraph-ontology.monarchinitiative.org/scigraph/graph/{{scigraph.neighborsStart}}?project=%2A">{{scigraph.neighborsStart}}
+            </a>
+          </h6>
+        </div>
+
+        <button
+          type="button"
+          class="col-xs-6 btn btn-xs btn-default"
+          ng-click="scigraph.getNeighbors('DOID:863')">
+          DOID:863 - nervous system disease
+        </button>
+
+        <button
+          type="button"
+          class="col-xs-6 btn btn-xs btn-default"
+          ng-click="scigraph.getNeighbors('HP:0001939')">
+          HP:0001939 - Abnormality of metabolism/homeostasis
+        </button>
+
+        <div class="panel-body pre-scrollable">
+          <ul class="list-group" scroll="scigraph.relationshipTypes">
+            <li class="list-group-item list-group-item-tiny"
+              ng-repeat="(key, value) in scigraph.neighbors track by $index">
+              <h5>{{key}}</h5>
+
+              <ul class="list-group" scroll="value">
+                <li class="list-group-item list-group-item-tiny"
+                  ng-repeat="v in value track by $index">
+                  <button class="btn btn-xs btn-primary btn-block"
+                    ng-click="scigraph.getNeighbors(v)">
+                    {{v}}
+                  </button>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h6 class="panel-title">Relationships and Properties</h6>
+        </div>
+
+        <div class="panel-body">
+          <div class="btn-group btn-group-justified" role="group" aria-label="...">
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-sm btn-default btn-bigfont" ng-click="scigraph.listProperties()">
+                List Properties
+              </button>
+            </div>
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-sm btn-default btn-bigfont" ng-click="scigraph.computeEdgeCounts()">
+                Compute Edge Counts
+              </button>
+            </div>
+          </div>
+
+          <hr/>
+
+
+          <ul class="list-group pre-scrollable" scroll="scigraph.logs.default">
+            <li class="list-group-item" ng-repeat="msg in scigraph.logs.default track by $index">
+      <!-- htmlmin:ignore -->
+              <json-formatter json="msg" open="55">
+              </json-formatter>
+      <!-- htmlmin:ignore -->
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="row row-bottom">
+    <div class="col-xs-12">
+      <div class="text-center">
+        <h6>&copy;&nbsp;2016&nbsp;<a target="_blank" href="http://monarchinitiative.org">Monarch Initiative</a></h6>
+      </div>
+    </div>
+  </div>
+</div>

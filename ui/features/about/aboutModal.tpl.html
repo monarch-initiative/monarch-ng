@@ -1,0 +1,24 @@
+<div class="modal-header">
+  <h3 class="modal-title">
+    Example Modal
+  </h3>
+</div>
+
+<div class="modal-body">
+  <form novalidate>
+    <div class="form-group">
+      <label for="userName">Name</label>
+      <input
+        autofocus
+        type="text"
+        ng-model="LM.modalInfo.userName"
+        class="form-control" id="userName"
+        placeholder="Your Name Here">
+    </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-primary" type="button" ng-click="LM.ok()">OK</button>
+  <button class="btn btn-default" type="button" ng-click="LM.cancel()">Cancel</button>
+</div>
+

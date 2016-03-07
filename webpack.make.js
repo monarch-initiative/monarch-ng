@@ -20,7 +20,6 @@ module.exports = function makeWebpackConfig (options) {
   var BUILD = !!options.BUILD;
   var TEST = !!options.TEST;
   var BUILDHASH = true;
-  var BUILDorGULP = BUILD || !!options.GULP;
 
   /**
    * Config
@@ -48,7 +47,6 @@ module.exports = function makeWebpackConfig (options) {
     'falcor/dist/falcor.browser.min.js',
     'moment/min/moment.min.js',
     'moment/min/locales.min.js',
-    'nvd3/build/nv.d3.min.js',
     'underscore/underscore-min.js'
   ];
 
@@ -89,7 +87,7 @@ module.exports = function makeWebpackConfig (options) {
 
       // Output path from the view of the page
       // Uses webpack-dev-server in development
-      publicPath: BUILDorGULP ? '' : (useTLSPrefix + '://localhost:4081/'),
+      publicPath: BUILD ? '' : (useTLSPrefix + '://localhost:4081/'),
 
       // Filename for entry points
       // Only adds hash in build mode

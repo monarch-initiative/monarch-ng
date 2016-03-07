@@ -47,9 +47,11 @@
 </head>
 <body ng-class="showKiosk() ? 'kioskmode' : ''">
 
-  <nav
+  <div
     ng-controller="NavbarController as navbar"
-    ng-if="showNavbar()" class="navbar navbar-default navbar-fixed-top" role="navigation">
+    ng-if="showNavbar()"
+    class="navbar navbar-default navbar-fixed-top"
+    role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle" ng-click="navbar.collapsed = !navbar.collapsed">
@@ -64,20 +66,58 @@
       <div class="collapse navbar-collapse" ng-class="!navbar.collapsed && 'in'">
 
         <ul class="nav navbar-nav">
-          <li ng-class="{'active':navbar.isActive('')}"> <a ng-click="navbar.collapsed = true" ui-sref="landing">OB One</a></li>
-          <li ng-class="{'active':navbar.isActive('scigraph')}"> <a ng-click="navbar.collapsed = true" ui-sref="scigraph">SciGraph</a></li>
-          <li ng-class="{'active':navbar.isActive('falcor')}"> <a ng-click="navbar.collapsed = true" ui-sref="falcor">Falcor</a></li>
+          <li
+            ng-class="{'active':navbar.isActive('')}">
+            <a
+              ng-click="navbar.collapsed = true"
+              ui-sref="landing">
+              OB One
+            </a>
+          </li>
+          <li
+            ng-class="{'active':navbar.isActive('scigraph')}">
+            <a
+              ng-click="navbar.collapsed = true"
+              ui-sref="scigraph">
+              SciGraph
+            </a>
+          </li>
+
+          <li
+            uib-dropdown
+            collapse>
+            <a
+              ng-click="navbar.collapsed = true"
+              ui-sref="webphenote">
+              WebPhenote
+            </a>
+
+          </li>
         </ul>
 
-        <ul class="nav navbar-nav navbar-right">
-          <li ng-class="{'active':navbar.isActive('d3')}"> <a ng-click="navbar.collapsed = true" ui-sref="d3">D3</a></li>
-          <li ng-class="{'active':navbar.isActive('about')}"><a ng-click="navbar.collapsed = true" ui-sref="about">About</a></li>
-          <li ng-class="{'active':navbar.isActive('settings')}"><a ng-click="navbar.collapsed = true" ui-sref="settings"><i class="fa fa-cog fa-fw"></i></a></li>
+        <ul
+          class="nav navbar-nav navbar-right">
+          <li
+            ng-class="{'active':navbar.isActive('about')}">
+            <a
+              ng-click="navbar.collapsed = true"
+              ui-sref="about">
+              About
+            </a>
+          </li>
+          <li
+            ng-class="{'active':navbar.isActive('settings')}">
+            <a
+              ng-click="navbar.collapsed = true"
+              ui-sref="settings">
+              <i class="fa fa-cog fa-fw"></i>
+            </a>
+          </li>
         </ul>
 
       </div>
     </div>
-  </nav>
+  </div>
 
   <div class="container-fluid main" ng-class="showNavbar() ? '' : 'nonavbar'">
       <div ui-view autoscroll="false"></div>

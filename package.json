@@ -18,14 +18,14 @@
   "author": "",
   "license": "CC-BY-3.0",
   "homepage": "https://github.com/DoctorBud/monarch-ng.git",
-  "engines" : {
-    "node" : ">=4.3"
+  "engines": {
+    "node": ">=4.3"
   },
   "dependencies": {
     "angular": "^1.4.9",
     "angular-animate": "^1.4.9",
     "angular-fontawesome": "^0.4.0",
-    "angular-nvd3": "1.0.5",
+    "angular-multi-step-form": "^1.2.8",
     "angular-sanitize": "^1.5.0-beta.0",
     "angular-ui-bootstrap": "^1.1.1",
     "angular-ui-router": "^1.0.0-alpha0",
@@ -45,11 +45,6 @@
     "jsonformatter": "^0.4.2",
     "localtunnel": "^1.8.1",
     "moment": "^2.11.1",
-    "nes": "^2.3.1",
-    "nvd3": "^1.8.2",
-    "pouchdb": "^5.2.1",
-    "pouchdb-erase": "^1.0.2",
-    "pouchdb-load": "^1.4.3",
     "promise": "^7.1.1",
     "request": "^2.69.0",
     "rx": "^4.0.7",
@@ -74,8 +69,6 @@
     "exports-loader": "^0.6.2",
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^0.8.5",
-    "gulp": "^3.9.0",
-    "gulp-util": "^3.0.7",
     "html-loader": "^0.4.0",
     "html-minifier": "^1.1.1",
     "html-webpack-plugin": "^2.9.0",

@@ -1,0 +1,41 @@
+<div class="container container-fluid">
+  <div class="row">
+    <multi-step-container steps="stepcontainer.steps" class="simple-prev-next">
+      <main step-container>
+
+      </main>
+
+      <header>
+        <button ng-disabled="$isFirst()" class="btn btn-default" ng-click="$previousStep()">
+            <span class="fa fa-chevron-left"></span>
+            Previous
+        </button>
+
+        <strong ng-if="$getActiveStep().hasForm" class="fa" ng-class="$getActiveStep().valid ? 'fa-check' : 'fa-times'"></strong>
+        </strong>
+
+        <button ng-disabled="$isLast() || ($getActiveStep().hasForm && !$getActiveStep().valid)" class="btn btn-default" ng-click="$nextStep()">
+            Next
+            <span class="fa fa-chevron-right"></span>
+        </button>
+      </header>
+
+      <div class="well well-sm">
+        <h6><strong>Domain</strong> {{stepcontainer.model.domain}}</h6>
+        <h6><strong>Model</strong> {{stepcontainer.model.model}}</h6>
+        <h6><strong>Disease</strong> {{stepcontainer.model.disease}}</h6>
+        <h6><strong>Phenotype</strong> {{stepcontainer.model.phenotype}}</h6>
+        <h6><strong>Onset</strong> {{stepcontainer.model.onset}}</h6>
+      </div>
+
+    </multi-step-container>
+  </div>
+
+
+  <div class="row row-bottom">
+    <div class="col-xs-12 text-center">
+    <h6>&copy;&nbsp;2016&nbsp;<a target="_blank" href="http://monarchinitiative.org">Monarch Initiative</a></h6>
+    </div>
+  </div>
+
+</div>

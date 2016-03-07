@@ -1,7 +1,5 @@
 import scigraph from './index';
 
-import falcor from './index';
-
 describe('Controller: SciGraph', function() {
   let $controller;
   let scope;
@@ -10,6 +8,7 @@ describe('Controller: SciGraph', function() {
   let timeout;
   let log;
 
+  console.log('scigraph:', scigraph);
   beforeEach(angular.mock.module(scigraph));
 
   beforeEach(angular.mock.inject(function($rootScope, $timeout, $log, $http, $httpBackend, _$controller_) {

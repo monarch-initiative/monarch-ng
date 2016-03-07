@@ -1,0 +1,32 @@
+<div class="container">
+  <div class="row well">
+    <h2>Welcome to WebPhenote</h2>
+    <p>
+      Researchers, authors, and curators use the Monarch WebPhenote tool to create and edit ontology models that accurately describe observed and documented relationships between the processes, agents, and elements (collectively, <i>individuals</i> in the ontology) underlying biological processes. Examples of these relationships and include:
+      <ul>
+        <li>
+        Arggh, add the markdown loader for prose like this.
+        </li>
+      </ul>
+    </p>
+  </div>
+
+  <div class="row well">
+    <h2>Choose a Domain</h2>
+    <p>
+      WebPhenote encourages the creation of A-Box models throughout the Monarch life science ontology by providing focused <i>domains</i> within which a model author can efficiently do their work of creation, annotation and curation. Please select a domain from the following list:
+
+      <div class="row" ng-repeat="domain in webphenote.domains">
+        <a class="col-xs-4 btn btn-default btn-sm" href="/{{domain.href}}">{{domain.title}}</a>
+        <p class="col-xs-8">{{domain.description}}</p>
+      </div>
+    </p>
+  </div>
+
+  <div class="row row-bottom">
+    <div class="col-xs-12 text-center">
+    <h6>&copy;&nbsp;2016&nbsp;<a target="_blank" href="http://monarchinitiative.org">Monarch Initiative</a></h6>
+    </div>
+  </div>
+
+</div>

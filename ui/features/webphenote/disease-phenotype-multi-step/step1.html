@@ -1,0 +1,26 @@
+<div class="well">
+  <h3>Select a Disease-Phenotype Model</h3>
+
+  <p>
+  You may either Create a new model, or choose to view or edit an existing model
+  </p>
+
+  <h3>Create a model</h3>
+  <form name="CreateModel" class="form-horizontal" form-step-validity>
+    <div class="form-group">
+      <label class="control-label col-sm-3">Model Name</label>
+
+      <div class="col-sm-7">
+        <input type="text" ng-model="stepcontainer.model.model.title" name="modelTitle" class="form-control" placeholder="Enter your new model title">
+      </div>
+    </div>
+  </form>
+
+  <h3>Select a model</h3>
+
+  <div class="row" ng-repeat="model in stepcontainer.models">
+    <a class="col-xs-4 btn btn-primary btn-sm" ng-click="stepcontainer.useModel(model)">{{model.title}}</a>
+    <p class="col-xs-8">{{model.description}}</p>
+  </div>
+
+</div>

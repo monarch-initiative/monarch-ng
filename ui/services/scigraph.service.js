@@ -1,10 +1,10 @@
-var useLocalFalcorDB = false;
+var useBrowserService = false;
 
 var _ = require('underscore');
 var falcor = require('falcor');
 import HttpDataSource from 'falcor-http-datasource';
 
-if (useLocalFalcorDB) {
+if (useBrowserService) {
   var scigraphRouterFactory = require('../../server/scigraph');
 }
 
@@ -19,9 +19,8 @@ class SciGraphService {
     this.service = this;
     /* eslint func-style: 0 */
 
-    if (useLocalFalcorDB) {
+    if (useBrowserService) {
       scigraphRouterFactory('APIKey', null, function(scigraphRouterInstance) {
-        console.log('setting model scigraphRouterInstance:', scigraphRouterInstance);
         that.service.model = new falcor.Model({
             source: scigraphRouterInstance
         });

@@ -14,10 +14,9 @@ import 'angular-fontawesome';
 import 'font-awesome/css/font-awesome.min.css';
 
 import routing from './app.config';
-import falcor from './features/falcor';
 import scigraph from './features/scigraph';
 import landing from './features/landing';
-import d3feature from './features/d3';
+import webphenoteModule from './features/webphenote';
 import about from './features/about';
 import settings from './features/settings';
 import navbar from './features/navbar';
@@ -27,21 +26,20 @@ import jsonformatter from 'jsonformatter';
 import jsonformatterCSS from 'jsonformatter/dist/json-formatter.min.css';
 import scroll from './directives/scroll.directive.js';
 import ngfileselect from './directives/fileselect.directive.js';
+import multiStepForm from 'angular-multi-step-form/dist/commonjs';
 
 import d3 from 'd3';
 global.d3 = d3;
-
-import nvd3 from 'nvd3';
-global.nvd3 = nvd3;
-import 'angular-nvd3';
 
 
 (function () {
   var app = ng.module('app',
             [nguirouter, ngsanitize, nguibootstrap, nganimate,
-            'nvd3', 'picardy.fontawesome',
-            jsonformatter, scroll, ngfileselect,
-            landing, falcor, scigraph, d3feature, about, settings, navbar],
+            'picardy.fontawesome',
+            jsonformatter, scroll, ngfileselect, multiStepForm.name,
+            landing, scigraph,
+            'app.webphenote',
+            about, settings, navbar],
             function($rootScopeProvider) {
                 $rootScopeProvider.digestTtl(15);
             });
@@ -58,14 +56,5 @@ import 'angular-nvd3';
       $rootScope.showKiosk = function () {
         return $location.path() === '/kiosk';
       };
-      // console.log('$location.path:', $location.path());
-      // if ($location.path() === '/') {
-      //   $timeout(
-      //     function () {
-      //       console.log('go landing');
-      //       $state.go('landing');
-      //     },
-      //     10);
-      // }
     });
 }());

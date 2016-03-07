@@ -2,13 +2,11 @@
 // Create a basic Hapi.js server
 var Hapi = require('hapi');
 var FalcorHapi = require('falcor-hapi');
-var falcorRouterFactory = require('./falcor');
 var scigraphRouterFactory = require('./scigraph');
 var dateFormat = require('dateformat');
 var format = 'dd mmm HH:MM:ss';
 var path = require('path');
 var Inert = require('inert');
-var Nes = require('nes');
 var fs = require('fs');
 
 // process.exit();
@@ -60,23 +58,7 @@ server.connection({
 });
 
 
-server.connection({
-  host: '0.0.0.0',
-  port: 4887,
-  labels: ['stream']
-});
-
-
-server.connection({
-  host: '0.0.0.0',
-  port: 4886,
-  labels: ['streamWS']
-});
-
-
 var webuiServer = server.select('webui');
-var streamServer = server.select('stream');
-var streamWSServer = server.select('streamWS');
 
 
 if (debugServer) {
@@ -114,67 +96,6 @@ function getHandler(request, reply) {
 }
 
 
-var stream = null;
-var counter;
-
-function trimStreamMessage(msg) {
-  return { id: msg.id,
-            text: msg.text,
-            user: msg.user.screen_name,
-            userbg: msg.user.profile_background_image_url_https,
-            created_at: msg.created_at,
-            place: msg.place ? msg.place.full_name : 'Unknown',
-            url: 'https://msg.com/' + msg.user.screen_name + '/status/' + msg.id_str
-          };
-}
-
-// https://blog.stream.com/2014/creating-a-realtime-stream-visualization-in-3-d
-function toggleStreamHandler(request, reply) {
-  if (stream) {
-    stream.stop();
-    stream = null;
-  }
-
-  if (!stream) {
-    counter = 25;
-    var S = {
-      on: function(msgType, msgHandler) {
-        // NYI
-      }
-    };
-
-    stream = S.stream('api/stream');
-    stream.on('stream', function (msg) {
-      // console.log('msg');
-      counter = counter - 1;
-      if (counter > 0) {
-        // calculate sentiment with "sentiment" module
-        // msg.sentiment = sentiment(msg.text);
-
-        var trimmed = trimStreamMessage(msg);
-        streamWSServer.broadcast(trimmed);
-      }
-      else {
-        msg.stop();
-        msg = null;
-      }
-    });
-  }
-}
-
-
-function streamHandler(request, reply) {
-  var S = {
-
-  };
-
-  S.get('api/stream', function(err, data, response) {
-    var statuses = data.statuses;
-    var trimmed = statuses.map(trimStreamMessage);
-    var result = {stream: trimmed};
-    reply(result).code( 200 );
-  });
-}
 
 var plugins = [Inert];
 var useFancyFalcorHapi = false;
@@ -197,12 +118,6 @@ webuiServer.register(plugins,
 
     console.error('webuiServer.registered:', err);
 
-    var falcorRouterInstance = falcorRouterFactory('1');
-    var falcorRouteHandler = FalcorHapi.dataSourceRoute(
-                              function(req, res) {
-                                  return falcorRouterInstance;
-                              });
-
     var scigraphRouterInstance = scigraphRouterFactory('GuestUser', null, function() {
       // console.log('scigraphRouterFactory completed initialization');
     });
@@ -213,28 +128,7 @@ webuiServer.register(plugins,
                               return scigraphRouterInstance;
                             });
 
-
     if (useFancyFalcorHapi) {
-      falcorRouteHandler = {
-          falcor: {
-              routes: [],
-              cacheRoutes: true,                                      // Whether to cache your routes, default to true
-              options: {
-                debug: true
-              },                                 // Option to give to Falcor router
-              // initialize: function() {                                // Optional initialize method
-              //   console.log('#INITIALIZE');
-              //   this.foo = this.req.payload.meaningoflife || 42;
-              // },
-              routerClass: function () {
-                var result = falcorRouterFactory('1');
-                result._debug = true;
-                return result;
-              }
-          }
-      };
-
-
       scigraphRouteHandler = {
           falcor: {
               routes: [],
@@ -273,11 +167,6 @@ webuiServer.register(plugins,
         }
     });
 
-    webuiServer.route({
-        method: ['GET', 'POST'],
-        path: '/model.json',
-        handler: falcorRouteHandler
-    });
 
     webuiServer.route({
         method: ['GET', 'POST'],
@@ -287,52 +176,16 @@ webuiServer.register(plugins,
 
     });
 
-    // webuiServer.route({
-    //     method: 'GET',
-    //     path: '/api/stream',
-    //     handler: toggleStreamHandler
-    // });
-
-
     // Add a route to serve static assets (CSS, JS, IMG)
     webuiServer.route({
       method: 'GET',
       path: '/{subpath*}',
       handler: getHandler
     });
+
+    server.start(function() {
+      console.log(dateFormat(new Date(), format) + ' - webuiServer started at: ' + webuiServer.info.uri);
+
+      fs.writeFileSync('./serverStarted.dat', (new Date()).toLocaleString());
+    });
   });
-
-
-streamWSServer.register([Nes], function (err) {
-
-  streamWSServer.route({
-    method: 'GET',
-    path: '/h',
-    config: {
-      id: 'hello',
-      handler: function (request, reply) {
-        toggleStreamHandler(null, null, streamWSServer);
-        return reply('world!');
-      }
-    }
-  });
-});
-
-
-streamServer.register([], function (err) {
-
-  streamServer.route({
-    method: 'GET',
-    path: '/api/stream',
-    handler: streamHandler
-  });
-
-  server.start(function() {
-    console.log(dateFormat(new Date(), format) + ' - webuiServer started at: ' + webuiServer.info.uri);
-    console.log(dateFormat(new Date(), format) + ' - streamServer started at: ' + streamServer.info.uri);
-    console.log(dateFormat(new Date(), format) + ' - streamWSServer started at: ' + streamWSServer.info.uri);
-
-    fs.writeFileSync('./serverStarted.dat', (new Date()).toLocaleString());
-  });
-});
-

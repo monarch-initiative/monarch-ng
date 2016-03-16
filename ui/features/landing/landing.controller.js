@@ -80,22 +80,42 @@ export default class LandingController {
           d3.select(self.frameElement).style("height", "800px");
       }
 
-      function reOrganize(root){
-          console.log(root);
+      function sciCall(sciRoot){
+          that.scigraph.getPartitionedNeighbors(sciRoot.name).then(
+              function (neighbors) {
+                  that.$rootScope.$apply(function() {
+                      sciRoot = neighbors;
+                      return reOrganize(sciRoot);
+                  });
+              },
+              function (z2) {
+                  console.log('getPartitionedNeighbors ERROR:', z2);
+              });
+      }
 
+      function reOrganize(reRoot){
+          that.getExpansionData(reRoot);
           //Strings not objects. Fix it, sloppily
           var reassign1 = [];
           var reassign2 = [];
           var reassign3 = [];
 
-          root.subClassOf.forEach(function(d){ reassign1.push(JSON.parse('{"name":"' + d + '"}')); });
-          root.subClassOf = reassign1;
+          if(reRoot.subClassOf){
+              reRoot.subClassOf.forEach(function(d){ reassign1.push(JSON.parse('{"name":"' + d + '"}')); });
+              reRoot.subClassOf = reassign1;
+          }
 
-          root['~isDefinedBy'].forEach(function(d){ reassign2.push(JSON.parse('{"name":"' + d + '"}')); });
-          root['~isDefinedBy'] = reassign2;
+          if(reRoot['~isDefinedBy']){
+              reRoot['~isDefinedBy'].forEach(function(d){ reassign2.push(JSON.parse('{"name":"' + d + '"}')); });
+              reRoot['~isDefinedBy'] = reassign2;
+          }
 
-          root['~subClassOf'].forEach(function(d){ reassign3.push(JSON.parse('{"name":"' + d + '"}')); });
-          root['~subClassOf'] = reassign3;
+          if(reRoot['~subClassOf']){
+              reRoot['~subClassOf'].forEach(function(d){ reassign3.push(JSON.parse('{"name":"' + d + '"}')); });
+              reRoot['~subClassOf'] = reassign3;
+          }
+
+          return reRoot;
       }
 
       //Tree layout unable to differentiate between groups of children, so I'm passing them in
@@ -205,6 +225,8 @@ export default class LandingController {
       // Toggle children on click.
       function nodeClick(d) {
           if(d.nodeType > 1){
+
+              //Temporarily hardcoded relationships, will be fixed by next push
               if(d.name == "subClassOf"){
                   d.parent.children = d.parent.subClassOf;
               }else if(d.name == "~isDefinedBy"){
@@ -223,9 +245,14 @@ export default class LandingController {
 
               updateTree(d, d.children, 0, 0);
           } else {
-              that.getExpansionData(d);
 
-              //Get list of d attributes, for now 3 presets
+              //To not mess up formatting of JSON, don't pass root in again
+              if(d != root){
+                  sciCall(d);
+              }
+
+
+              //Get list of d attributes, for now 3 presets, will be fixed by next push
               var axisData = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
 
               //d._children = axisData;

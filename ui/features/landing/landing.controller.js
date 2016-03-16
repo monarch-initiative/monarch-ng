@@ -51,33 +51,57 @@ export default class LandingController {
           });
       }
 
-    var flare = require("json!./realOntology.json");
-
       this.scigraph.getPartitionedNeighbors('DOID:863').then(
           function (neighbors) {
               that.$rootScope.$apply(function() {
                   that.neighbors = neighbors;
-                  console.log(neighbors);
+                  initialize();
               });
           },
           function (z2) {
               console.log('getPartitionedNeighbors ERROR:', z2);
-          },
-            initialize());
+          });
+
+
 
       function initialize(){
-          root = flare;
+          root = that.neighbors;
           root.x0 = height / 2;
           root.y0 = 0;
+          //Hardcoded name
+          root.name = 'DOID:863';
 
+          reOrganize(root);
 
-          root.children.forEach(collapse);
-          updateTree(root, 0, 0);
+          //Let it know it has children
+          root._children = root.subClassOf;
+          updateTree(root, null, 0, 0);
 
           d3.select(self.frameElement).style("height", "800px");
       }
 
-      function updateTree(source, type, axis) {
+      function reOrganize(root){
+          console.log(root);
+
+          //Strings not objects. Fix it, sloppily
+          var reassign1 = [];
+          var reassign2 = [];
+          var reassign3 = [];
+
+          root.subClassOf.forEach(function(d){ reassign1.push(JSON.parse('{"name":"' + d + '"}')); });
+          root.subClassOf = reassign1;
+
+          root['~isDefinedBy'].forEach(function(d){ reassign2.push(JSON.parse('{"name":"' + d + '"}')); });
+          root['~isDefinedBy'] = reassign2;
+
+          root['~subClassOf'].forEach(function(d){ reassign3.push(JSON.parse('{"name":"' + d + '"}')); });
+          root['~subClassOf'] = reassign3;
+      }
+
+      //Tree layout unable to differentiate between groups of children, so I'm passing them in
+      function updateTree(source, children, type, axis) {
+
+          source.children = children;
 
           var color = ['#ccc', '#ccc', 'red', 'green'];
 
@@ -178,32 +202,37 @@ export default class LandingController {
       }
 
 
-
-
       // Toggle children on click.
       function nodeClick(d) {
           if(d.nodeType > 1){
-              d.parent.children = d._children;
+              if(d.name == "subClassOf"){
+                  d.parent.children = d.parent.subClassOf;
+              }else if(d.name == "~isDefinedBy"){
+                  d.parent.children = d.parent['~isDefinedBy'];
+              }else if(d.name == "~subClassOf"){
+                  d.parent.children = d.parent['~subClassOf'];
+              }
+
               d.parent._children = null;
 
-              updateTree(d.parent, d.nodeType - 1, 1);
-
+              updateTree(d.parent, d.parent.children, d.nodeType - 1, 1);
           }
           else if (d.children) {
               d._children = d.children;
               d.children = null;
+
+              updateTree(d, d.children, 0, 0);
           } else {
               that.getExpansionData(d);
 
               //Get list of d attributes, for now 3 presets
-              var axisData = [{"name": "is-a", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "has-a", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "attribute-of", "parent": d.name, "_children": d._children, "nodeType": 4}];
+              var axisData = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
 
               //d._children = axisData;
               d.children = axisData;
 
-              updateTree(d, 0, 0);
+              updateTree(d, d.children, 0, 0);
           }
-          updateTree(d, 0, 0);
       }
   }
 

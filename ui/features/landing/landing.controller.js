@@ -6,7 +6,7 @@ var _ = require('underscore');
 var angular = require('angular');
 
 export default class LandingController {
-  constructor($rootScope, scigraph) {
+  constructor($rootScope, scigraph, $timeout) {
     var that = this;
     this.name = 'Landing';
     this.title = 'This is my title';
@@ -17,6 +17,14 @@ export default class LandingController {
       var i = 0;
       var duration = 750;
       var root;
+      var currentNode;
+
+
+      $timeout(function(){
+         that.title += 'x';
+      }, 5000);
+
+
 
     var d3 = global.d3;
 
@@ -55,6 +63,7 @@ export default class LandingController {
           function (neighbors) {
               that.$rootScope.$apply(function() {
                   that.neighbors = neighbors;
+                //  console.log(neighbors);
                   initialize();
               });
           },
@@ -68,10 +77,7 @@ export default class LandingController {
           root = that.neighbors;
           root.x0 = height / 2;
           root.y0 = 0;
-          //Hardcoded name
-          root.name = 'DOID:863';
-
-          reOrganize(root);
+          root.name = "DOID:863";
 
           //Let it know it has children
           root._children = root.subClassOf;
@@ -81,41 +87,19 @@ export default class LandingController {
       }
 
       function sciCall(sciRoot){
+          var safeName = sciRoot.name;
           that.scigraph.getPartitionedNeighbors(sciRoot.name).then(
               function (neighbors) {
                   that.$rootScope.$apply(function() {
                       sciRoot = neighbors;
-                      return reOrganize(sciRoot);
+                      sciRoot.name = safeName;
+                      sciRoot.children = sciRoot.subClassOf;
+                      moveOn(sciRoot);
                   });
               },
               function (z2) {
                   console.log('getPartitionedNeighbors ERROR:', z2);
               });
-      }
-
-      function reOrganize(reRoot){
-          that.getExpansionData(reRoot);
-          //Strings not objects. Fix it, sloppily
-          var reassign1 = [];
-          var reassign2 = [];
-          var reassign3 = [];
-
-          if(reRoot.subClassOf){
-              reRoot.subClassOf.forEach(function(d){ reassign1.push(JSON.parse('{"name":"' + d + '"}')); });
-              reRoot.subClassOf = reassign1;
-          }
-
-          if(reRoot['~isDefinedBy']){
-              reRoot['~isDefinedBy'].forEach(function(d){ reassign2.push(JSON.parse('{"name":"' + d + '"}')); });
-              reRoot['~isDefinedBy'] = reassign2;
-          }
-
-          if(reRoot['~subClassOf']){
-              reRoot['~subClassOf'].forEach(function(d){ reassign3.push(JSON.parse('{"name":"' + d + '"}')); });
-              reRoot['~subClassOf'] = reassign3;
-          }
-
-          return reRoot;
       }
 
       //Tree layout unable to differentiate between groups of children, so I'm passing them in
@@ -160,7 +144,8 @@ export default class LandingController {
 
           nodeUpdate.select("circle")
               .attr("r", 4.5)
-              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+              .style("fill", "lightsteelblue");
+              //.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
           nodeUpdate.select("text")
               .style("fill-opacity", 1);
@@ -224,6 +209,9 @@ export default class LandingController {
 
       // Toggle children on click.
       function nodeClick(d) {
+
+          currentNode = d;
+
           if(d.nodeType > 1){
 
               //Temporarily hardcoded relationships, will be fixed by next push
@@ -245,22 +233,33 @@ export default class LandingController {
 
               updateTree(d, d.children, 0, 0);
           } else {
-
               //To not mess up formatting of JSON, don't pass root in again
               if(d != root){
                   sciCall(d);
+              }else{
+                  d.children = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
               }
-
-
-              //Get list of d attributes, for now 3 presets, will be fixed by next push
-              var axisData = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
-
-              //d._children = axisData;
-              d.children = axisData;
 
               updateTree(d, d.children, 0, 0);
           }
       }
+
+      function moveOn(d){
+
+          for (var key in d) {
+              if (d.hasOwnProperty(key)) {
+                currentNode[key] = d[key];
+              }
+          }
+
+          //Get list of d attributes, for now 3 presets, will be fixed by next push
+          var axisData = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
+
+          //d._children = axisData;
+          d.children = axisData;
+          updateTree(currentNode, axisData, 0, 0);
+      }
+
   }
 
   getExpansionData(d) {
@@ -268,4 +267,4 @@ export default class LandingController {
   }
 }
 
-LandingController.$inject = ['$rootScope', 'scigraph'];
+LandingController.$inject = ['$rootScope', 'scigraph', '$timeout'];

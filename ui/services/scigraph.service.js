@@ -65,11 +65,13 @@ class SciGraphService {
                   }
                   var partition = partitionMap[partitionKey] || (partitionMap[partitionKey] = []);
 
+
                   if (partition.length < 100) {
-                    partition.push(targetObject);
+                     partition.push(JSON.parse('{"name":"' + targetObject + '"}'));
                   }
                 }
 
+                  console.log(partitionMap);
                 resolve(partitionMap);
               },
               function (z2) {

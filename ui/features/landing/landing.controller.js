@@ -6,10 +6,25 @@ var _ = require('underscore');
 var angular = require('angular');
 
 export default class LandingController {
-  constructor() {
+  constructor($rootScope, scigraph, $timeout) {
     var that = this;
     this.name = 'Landing';
     this.title = 'This is my title';
+      this.scigraph = scigraph;
+      this.$rootScope = $rootScope;
+      this.model = null;
+      this.neighbors = [];
+      var i = 0;
+      var duration = 750;
+      var root;
+      var currentNode;
+
+
+      $timeout(function(){
+         that.title += 'x';
+      }, 5000);
+
+
 
     var d3 = global.d3;
 
@@ -17,9 +32,7 @@ export default class LandingController {
         width = 960 - margin.right - margin.left,
         height = 800 - margin.top - margin.bottom;
 
-    var i = 0,
-        duration = 750,
-        root;
+
 
     var tree = d3.layout.tree()
         .size([height, width]);
@@ -37,145 +50,221 @@ export default class LandingController {
 
     // http://wafi.iit.cnr.it/webvis/tmp/dbpedia/realOntology.json
 
-    var flare = require("json!./realOntology.json");
+      if (scigraph.model) {
+          that.model = scigraph.model;
+      }
+      else {
+          $rootScope.$on('scigraph-service-initialized', function () {
+              that.model = scigraph.model;
+          });
+      }
 
-    root = flare;
-    root.x0 = height / 2;
-    root.y0 = 0;
+      this.scigraph.getPartitionedNeighbors('DOID:863').then(
+          function (neighbors) {
+              that.$rootScope.$apply(function() {
+                  that.neighbors = neighbors;
+                //  console.log(neighbors);
+                  initialize();
+              });
+          },
+          function (z2) {
+              console.log('getPartitionedNeighbors ERROR:', z2);
+          });
 
-    function collapse(d) {
-        if (d.children) {
-            d._children = d.children;
-            d._children.forEach(collapse);
-            d.children = null;
-        }
-    }
 
-    root.children.forEach(collapse);
-    update(root, 0, 0);
 
-    d3.select(self.frameElement).style("height", "800px");
+      function initialize(){
+          root = that.neighbors;
+          root.x0 = height / 2;
+          root.y0 = 0;
+          root.name = "DOID:863";
 
-    function update(source, type, axis) {
+          //Let it know it has children
+          root._children = root.subClassOf;
+          updateTree(root, null, 0, 0);
 
-        var color = ['#ccc', '#ccc', 'red', 'green'];
+          d3.select(self.frameElement).style("height", "800px");
+      }
 
-        // Compute the new tree layout.
-        var nodes = tree.nodes(root).reverse(),
-            links = tree.links(nodes);
+      function sciCall(sciRoot){
+          var safeName = sciRoot.name;
+          that.scigraph.getPartitionedNeighbors(sciRoot.name).then(
+              function (neighbors) {
+                  that.$rootScope.$apply(function() {
+                      sciRoot = neighbors;
+                      sciRoot.name = safeName;
+                      sciRoot.children = sciRoot.subClassOf;
+                      moveOn(sciRoot);
+                  });
+              },
+              function (z2) {
+                  console.log('getPartitionedNeighbors ERROR:', z2);
+              });
+      }
 
-        // Normalize for fixed-depth.
-        nodes.forEach(function(d) { d.y = d.depth * 180; });
+      //Tree layout unable to differentiate between groups of children, so I'm passing them in
+      function updateTree(source, children, type, axis) {
 
-        // Update the nodes…
-        var node = svg.selectAll("g.node")
-            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+          source.children = children;
 
-        // Enter any new nodes at the parent's previous position.
-        var nodeEnter = node.enter().append("g")
-            .attr("class", "node")
-            .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-            .on("click", click);
+          var color = ['#ccc', '#ccc', 'red', 'green'];
 
-        nodeEnter.append("circle")
-            .attr("r", 1e-6)
-            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+          // Compute the new tree layout.
+          var nodes = tree.nodes(root).reverse(),
+              links = tree.links(nodes);
 
-        nodeEnter.append("text")
-            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dy", ".35em")
-            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return d.name; })
-            .style("fill-opacity", 1e-6);
+          // Normalize for fixed-depth.
+          nodes.forEach(function(d) { d.y = d.depth * 180; });
 
-        // Transition nodes to their new position.
-        var nodeUpdate = node.transition()
-            .duration(duration)
-            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+          // Update the nodes…
+          var node = svg.selectAll("g.node")
+              .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
-        nodeUpdate.select("circle")
-            .attr("r", 4.5)
-            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+          // Enter any new nodes at the parent's previous position.
+          var nodeEnter = node.enter().append("g")
+              .attr("class", "node")
+              .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+              .on("click", nodeClick);
 
-        nodeUpdate.select("text")
-            .style("fill-opacity", 1);
+          nodeEnter.append("circle")
+              .attr("r", 1e-6)
+              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
-        // Transition exiting nodes to the parent's new position.
-        var nodeExit = node.exit().transition()
-            .duration(duration)
-            .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
-            .remove();
+          nodeEnter.append("text")
+              .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+              .attr("dy", ".35em")
+              .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+              .text(function(d) { return d.name; })
+              .style("fill-opacity", 1e-6);
 
-        nodeExit.select("circle")
-            .attr("r", 1e-6);
+          // Transition nodes to their new position.
+          var nodeUpdate = node.transition()
+              .duration(duration)
+              .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
-        nodeExit.select("text")
-            .style("fill-opacity", 1e-6);
+          nodeUpdate.select("circle")
+              .attr("r", 4.5)
+              .style("fill", "lightsteelblue");
+              //.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
-        // Update the links…
-        var link = svg.selectAll("path.link")
-            .data(links, function(d) { return d.target.id; });
+          nodeUpdate.select("text")
+              .style("fill-opacity", 1);
 
-        // Enter any new links at the parent's previous position.
-        link.enter().insert("path", "g")
-            .attr("class", "link")
-            .attr("d", function(d) {
-                var o = {x: source.x0, y: source.y0};
-                return diagonal({source: o, target: o});
-            })
-            .style("stroke", function(d){
-                return axis ? color[type] : color[d.target.nodeType - 1];
-            });
+          // Transition exiting nodes to the parent's new position.
+          var nodeExit = node.exit().transition()
+              .duration(duration)
+              .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+              .remove();
 
-        // Transition links to their new position.
-        link.transition()
-            .duration(duration)
-            .attr("d", diagonal);
+          nodeExit.select("circle")
+              .attr("r", 1e-6);
 
-        // Transition exiting nodes to the parent's new position.
-        link.exit().transition()
-            .duration(duration)
-            .attr("d", function(d) {
-                var o = {x: source.x, y: source.y};
-                return diagonal({source: o, target: o});
-            })
-            .remove();
+          nodeExit.select("text")
+              .style("fill-opacity", 1e-6);
 
-        // Stash the old positions for transition.
-        nodes.forEach(function(d) {
-            d.x0 = d.x;
-            d.y0 = d.y;
-        });
-    }
+          // Update the links…
+          var link = svg.selectAll("path.link")
+              .data(links, function(d) { return d.target.id; });
 
-    // Toggle children on click.
-    function click(d) {
-        if(d.nodeType > 1){
-            d.parent.children = d._children;
-            d.parent._children = null;
+          // Enter any new links at the parent's previous position.
+          link.enter().insert("path", "g")
+              .attr("class", "link")
+              .attr("d", function(d) {
+                  var o = {x: source.x0, y: source.y0};
+                  return diagonal({source: o, target: o});
+              })
+              .style("stroke", function(d){
+                  return axis ? color[type] : color[d.target.nodeType - 1];
+              });
 
-            update(d.parent, d.nodeType - 1, 1);
+          // Transition links to their new position.
+          link.transition()
+              .duration(duration)
+              .attr("d", diagonal);
 
-        }
-        else if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            that.getExpansionData(d);
+          // Transition exiting nodes to the parent's new position.
+          link.exit().transition()
+              .duration(duration)
+              .attr("d", function(d) {
+                  var o = {x: source.x, y: source.y};
+                  return diagonal({source: o, target: o});
+              })
+              .remove();
 
-            //Get list of d attributes, for now 3 presets
-            var axisData = [{"name": "is-a", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "has-a", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "attribute-of", "parent": d.name, "_children": d._children, "nodeType": 4}];
+          // Stash the old positions for transition.
+          nodes.forEach(function(d) {
+              d.x0 = d.x;
+              d.y0 = d.y;
+          });
+      }
 
-            //d._children = axisData;
-            d.children = axisData;
+      function collapse(d) {
+          if (d.children) {
+              d._children = d.children;
+              d._children.forEach(collapse);
+              d.children = null;
+          }
+      }
 
-            update(d, 0, 0);
-        }
-        update(d, 0, 0);
-    }
+
+      // Toggle children on click.
+      function nodeClick(d) {
+
+          currentNode = d;
+
+          if(d.nodeType > 1){
+
+              //Temporarily hardcoded relationships, will be fixed by next push
+              if(d.name == "subClassOf"){
+                  d.parent.children = d.parent.subClassOf;
+              }else if(d.name == "~isDefinedBy"){
+                  d.parent.children = d.parent['~isDefinedBy'];
+              }else if(d.name == "~subClassOf"){
+                  d.parent.children = d.parent['~subClassOf'];
+              }
+
+              d.parent._children = null;
+
+              updateTree(d.parent, d.parent.children, d.nodeType - 1, 1);
+          }
+          else if (d.children) {
+              d._children = d.children;
+              d.children = null;
+
+              updateTree(d, d.children, 0, 0);
+          } else {
+              //To not mess up formatting of JSON, don't pass root in again
+              if(d != root){
+                  sciCall(d);
+              }else{
+                  d.children = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
+              }
+
+              updateTree(d, d.children, 0, 0);
+          }
+      }
+
+      function moveOn(d){
+
+          for (var key in d) {
+              if (d.hasOwnProperty(key)) {
+                currentNode[key] = d[key];
+              }
+          }
+
+          //Get list of d attributes, for now 3 presets, will be fixed by next push
+          var axisData = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
+
+          //d._children = axisData;
+          d.children = axisData;
+          updateTree(currentNode, axisData, 0, 0);
+      }
+
   }
 
   getExpansionData(d) {
     console.log('getExpansionData', d);
   }
 }
+
+LandingController.$inject = ['$rootScope', 'scigraph', '$timeout'];

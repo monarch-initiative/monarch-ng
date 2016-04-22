@@ -1,4 +1,4 @@
-var useBrowserService = false;
+var useBrowserService = true;
 
 var _ = require('underscore');
 var falcor = require('falcor');

@@ -2,7 +2,7 @@ var _ = require('underscore');
 // var Promise = require('promise');
 var path = require('path');
 
-var scigraphURL = 'http://scigraph-ontology.monarchinitiative.org';
+var scigraphURL = 'https://scigraph-ontology.monarchinitiative.org';
 var sgRelationshipTypesPath = '/scigraph/graph/relationship_types';
 var sgPropertiesPath = '/scigraph/graph/properties';
 var sgEdgesPath = '/scigraph/graph/edges';

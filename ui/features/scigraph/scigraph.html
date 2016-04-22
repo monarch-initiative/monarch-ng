@@ -8,7 +8,7 @@
       <h4>
         <a
           target="_blank"
-          href="http://scigraph-ontology.monarchinitiative.org/scigraph/docs/">SciGraph Experiments
+          href="https://scigraph-ontology.monarchinitiative.org/scigraph/docs/">SciGraph Experiments
         </a>
       </h4>
     </div>
@@ -73,7 +73,7 @@
             Neighborhood of
             <a
               target="_blank"
-              href="http://scigraph-ontology.monarchinitiative.org/scigraph/graph/{{scigraph.neighborsStart}}?project=%2A">{{scigraph.neighborsStart}}
+              href="https://scigraph-ontology.monarchinitiative.org/scigraph/graph/{{scigraph.neighborsStart}}?project=%2A">{{scigraph.neighborsStart}}
             </a>
           </h6>
         </div>
@@ -102,8 +102,8 @@
                 <li class="list-group-item list-group-item-tiny"
                   ng-repeat="v in value track by $index">
                   <button class="btn btn-xs btn-primary btn-block"
-                    ng-click="scigraph.getNeighbors(v)">
-                    {{v}}
+                    ng-click="scigraph.getNeighbors(v.name)">
+                    {{v.name}}
                   </button>
                 </li>
               </ul>

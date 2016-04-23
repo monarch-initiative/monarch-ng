@@ -59,19 +59,21 @@ class SciGraphService {
                   var value = neighborsMap[key];
                   var partitionKey = value.pred;
                   var targetObject = value.sub;
-                  if (targetObject === id) {
+                  if (targetObject.id === id) {
                     targetObject = value.obj;
                     partitionKey = '~' + partitionKey;
                   }
                   var partition = partitionMap[partitionKey] || (partitionMap[partitionKey] = []);
 
-
                   if (partition.length < 100) {
-                     partition.push(JSON.parse('{"name":"' + targetObject + '"}'));
+                    var entry = {
+                      id: targetObject.id,
+                      lbl: targetObject.lbl
+                    };
+                    partition.push(entry);
                   }
                 }
 
-                  console.log(partitionMap);
                 resolve(partitionMap);
               },
               function (z2) {

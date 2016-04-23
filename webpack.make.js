@@ -4,7 +4,6 @@
 var webpack = require('webpack');
 var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var OfflinePlugin = require('offline-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var path = require('path');
@@ -426,49 +425,6 @@ module.exports = function makeWebpackConfig (options) {
             { from: 'ui/favicon.ico', to: 'favicon.ico' }
           ])
 
-    );
-  }
-
-  var MANIFEST = false;
-  if (MANIFEST) {
-    config.plugins.push(
-      // https://github.com/NekR/offline-plugin
-      new OfflinePlugin({
-        // All options are optional
-        // caches: 'all',
-        scope: '/',
-        relativePaths: true,
-        updateStrategy: 'all',
-        // version: 'v12',
-
-        caches: {
-          main: [
-            'index.html',
-            'favicon.ico',
-            '404.html',
-            ':rest:'
-          ],
-          additional: [
-            'https://fonts.googleapis.com/css'
-          ]
-        },
-
-        externals: [
-            '404.html',
-            'https://fonts.googleapis.com/css'
-        ],
-
-        ServiceWorker: {
-          output: 'sw.js'
-        },
-        AppCache: {
-          directory: '',
-          NETWORK: '*',
-          FALLBACK: {
-            '/about': '/'
-          }
-        }
-      })
     );
   }
 

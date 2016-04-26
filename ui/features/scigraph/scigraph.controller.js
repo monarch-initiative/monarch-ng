@@ -143,10 +143,8 @@ export default class SciGraphController {
     var neighborsLengthPath = 'nodes["' + id + '"]neighbors.length';
     that.log(neighborsLengthPath);
     this.model.get(neighborsLengthPath).then(function(neighborsResponse) {
-      console.log('neighborsResponse:', neighborsResponse);
       var len = neighborsResponse.json.nodes[id].neighbors.length;
       that.log(neighborsResponse.json);
-      console.log(neighborsLengthPath, len);
 
       var neighborsPath = 'nodes["' + id + '"].neighbors[0..' + (len - 1) + ']["sub", "obj", "pred", "meta"]';
       that.log(neighborsPath);

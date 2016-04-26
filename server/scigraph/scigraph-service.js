@@ -51,6 +51,35 @@ function SciGraphService(isNodeJS, userId, preloadGraph, initializedUserCb) {
   initializedUserCb();
 }
 
+
+function joinNodes(edges, nodes) {
+  var nodeMap = {};
+  _.each(nodes, function (node) {
+    nodeMap[node.id] = node;
+  });
+
+  var result = [];
+  var resultMap = {};
+  _.each(edges, function (edge) {
+    var edgeKey = edge.sub + '/' + edge.pred + '/' + edge.obj;
+    if (resultMap[edgeKey]) {
+      // console.log('DUP:', edge);
+    }
+    else {
+      resultMap[edgeKey] = true;
+      result.push({
+        sub: nodeMap[edge.sub],
+        obj: nodeMap[edge.obj],
+        pred: edge.pred
+      });
+    }
+  });
+
+  // console.log('join:', result);
+  return result;
+}
+
+
 SciGraphService.prototype = {
   getRelationshipTypes: function() {
     var result = new Promise(
@@ -153,7 +182,6 @@ SciGraphService.prototype = {
       // The resolver function is called with the ability to resolve or
       // reject the promise
       function(resolve, reject) {
-        console.log('getNeighbors', ids, relationshipType, direction);
         var resultEdges = {};
         var getters = [];
         var getterKeys = [];
@@ -182,9 +210,11 @@ SciGraphService.prototype = {
       Axios.all(getters)
       .then(Axios.spread(function() {
         var xresult = {};
+        var nodes = arguments[0].data.nodes;
         var edges = arguments[0].data.edges;
-        // var nodes = arguments[0].data.nodes;
-        xresult[getterKeys[0]] = edges;
+        var mergedEdges = joinNodes(edges, nodes);
+
+        xresult[getterKeys[0]] = mergedEdges;
         resolve(xresult);
       }));
     });

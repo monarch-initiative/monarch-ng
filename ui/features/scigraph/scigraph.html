@@ -80,14 +80,21 @@
 
         <button
           type="button"
-          class="col-xs-6 btn btn-xs btn-default"
+          class="col-xs-4 btn btn-xs btn-default"
           ng-click="scigraph.getNeighbors('DOID:863')">
           DOID:863 - nervous system disease
         </button>
 
         <button
           type="button"
-          class="col-xs-6 btn btn-xs btn-default"
+          class="col-xs-4 btn btn-xs btn-default"
+          ng-click="scigraph.getNeighbors('MESH:C535603')">
+          MESH:C535603 - Drachtman Weinblatt Sitarz syndrome
+        </button>
+
+        <button
+          type="button"
+          class="col-xs-4 btn btn-xs btn-default"
           ng-click="scigraph.getNeighbors('HP:0001939')">
           HP:0001939 - Abnormality of metabolism/homeostasis
         </button>
@@ -102,8 +109,8 @@
                 <li class="list-group-item list-group-item-tiny"
                   ng-repeat="v in value track by $index">
                   <button class="btn btn-xs btn-primary btn-block"
-                    ng-click="scigraph.getNeighbors(v.name)">
-                    {{v.name}}
+                    ng-click="scigraph.getNeighbors(v.id)">
+                    {{v.id}}: {{v.lbl}}
                   </button>
                 </li>
               </ul>

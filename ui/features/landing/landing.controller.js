@@ -10,25 +10,18 @@ export default class LandingController {
     var that = this;
     this.name = 'Landing';
     this.title = 'This is my title';
-      this.scigraph = scigraph;
-      this.$rootScope = $rootScope;
-      this.model = null;
-      this.neighbors = [];
-      var i = 0;
-      var duration = 750;
-      var root;
-      var currentNode;
-
-
-      $timeout(function(){
-         that.title += 'x';
-      }, 5000);
-
-
+    this.scigraph = scigraph;
+    this.$rootScope = $rootScope;
+    this.model = null;
+    this.neighbors = [];
+    var i = 0;
+    var duration = 750;
+    var root;
+    var currentNode;
 
     var d3 = global.d3;
 
-    var margin = {top: 20, right: 120, bottom: 20, left: 120},
+    var margin = {top: 20, right: 120, bottom: 20, left: 20},
         width = 960 - margin.right - margin.left,
         height = 800 - margin.top - margin.bottom;
 
@@ -62,22 +55,21 @@ export default class LandingController {
       this.scigraph.getPartitionedNeighbors('DOID:863').then(
           function (neighbors) {
               that.$rootScope.$apply(function() {
-                  that.neighbors = neighbors;
-                //  console.log(neighbors);
-                  initialize();
+                that.neighbors = neighbors;
+                initialize();
               });
           },
           function (z2) {
               console.log('getPartitionedNeighbors ERROR:', z2);
           });
 
-
-
       function initialize(){
           root = that.neighbors;
           root.x0 = height / 2;
           root.y0 = 0;
-          root.name = "DOID:863";
+          root.id = "DOID:863";
+          root.lbl = 'Disease of anatomical entity';
+          root.depth = 0;
 
           //Let it know it has children
           root._children = root.subClassOf;
@@ -87,24 +79,27 @@ export default class LandingController {
       }
 
       function sciCall(sciRoot){
-          var safeName = sciRoot.name;
-          that.scigraph.getPartitionedNeighbors(sciRoot.name).then(
-              function (neighbors) {
-                  that.$rootScope.$apply(function() {
-                      sciRoot = neighbors;
-                      sciRoot.name = safeName;
-                      sciRoot.children = sciRoot.subClassOf;
-                      moveOn(sciRoot);
-                  });
-              },
-              function (z2) {
-                  console.log('getPartitionedNeighbors ERROR:', z2);
-              });
+        var safeId = sciRoot.id;
+        var safeName = sciRoot.lbl;
+        var safeDepth = sciRoot.depth;
+        that.scigraph.getPartitionedNeighbors(sciRoot.id).then(
+            function (neighbors) {
+                that.$rootScope.$apply(function() {
+                    sciRoot = neighbors;
+                    sciRoot.id = safeId;
+                    sciRoot.lbl = safeName;
+                    sciRoot.depth = safeDepth;
+                    sciRoot.children = null;  // sciRoot.subClassOf;
+                    moveOn(sciRoot);
+                });
+            },
+            function (z2) {
+                console.log('getPartitionedNeighbors ERROR:', z2);
+            });
       }
 
       //Tree layout unable to differentiate between groups of children, so I'm passing them in
       function updateTree(source, children, type, axis) {
-
           source.children = children;
 
           var color = ['#ccc', '#ccc', 'red', 'green'];
@@ -114,11 +109,13 @@ export default class LandingController {
               links = tree.links(nodes);
 
           // Normalize for fixed-depth.
-          nodes.forEach(function(d) { d.y = d.depth * 180; });
+          nodes.forEach(function(d) { d.y = d.depth * 200; });
 
           // Update the nodes…
           var node = svg.selectAll("g.node")
-              .data(nodes, function(d) { return d.id || (d.id = ++i); });
+              .data(nodes, function(d) {
+                return d.id + '.' + d.depth;
+              });
 
           // Enter any new nodes at the parent's previous position.
           var nodeEnter = node.enter().append("g")
@@ -131,10 +128,14 @@ export default class LandingController {
               .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
           nodeEnter.append("text")
-              .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+              .attr("x", function(d) {
+                return 10; })             // (d.children || d._children) ? -10 : 10; })
               .attr("dy", ".35em")
-              .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-              .text(function(d) { return d.name; })
+              .attr("text-anchor", function(d) { return "start"; })  // (d.children || d._children) ? "end" : "start"; })
+              .text(function(d) {
+                var lbl = d.id + ' ' + d.lbl;
+                return lbl.substr(0, 30);
+              })
               .style("fill-opacity", 1e-6);
 
           // Transition nodes to their new position.
@@ -164,7 +165,13 @@ export default class LandingController {
 
           // Update the links…
           var link = svg.selectAll("path.link")
-              .data(links, function(d) { return d.target.id; });
+              .data(links, function(d) {
+                return d.target.id + '.' + d.target.depth; });
+
+          link.text(function(d) {
+            var lbl = d.id + ' ' + d.lbl;
+            return lbl.substr(0, 30);
+          });
 
           // Enter any new links at the parent's previous position.
           link.enter().insert("path", "g")
@@ -209,17 +216,16 @@ export default class LandingController {
 
       // Toggle children on click.
       function nodeClick(d) {
-
           currentNode = d;
 
           if(d.nodeType > 1){
 
               //Temporarily hardcoded relationships, will be fixed by next push
-              if(d.name == "subClassOf"){
+              if(d.lbl == "subClassOf"){
                   d.parent.children = d.parent.subClassOf;
-              }else if(d.name == "~isDefinedBy"){
+              }else if(d.lbl == "~isDefinedBy"){
                   d.parent.children = d.parent['~isDefinedBy'];
-              }else if(d.name == "~subClassOf"){
+              }else if(d.lbl == "~subClassOf"){
                   d.parent.children = d.parent['~subClassOf'];
               }
 
@@ -234,11 +240,15 @@ export default class LandingController {
               updateTree(d, d.children, 0, 0);
           } else {
               //To not mess up formatting of JSON, don't pass root in again
-              if(d != root){
-                  sciCall(d);
-              }else{
-                  d.children = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
-              }
+              // if (d != root){
+              sciCall(d);
+              // }else
+              // {
+              //     d.children = [
+              //     {"level": d.level + 1, "name": "subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 2, "id": "subClassOf", "lbl": "subClassOf"},
+              //     {"level": d.level + 1, "name": "~isDefinedBy", "parent": d.lbl, "_children": d._children, "nodeType": 3, "id": "~isDefinedBy", "lbl": "~isDefinedBy"},
+              //     {"level": d.level + 1, "name": "~subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 4, "id": "~subClassOf", "lbl": "~subClassOf"}];
+              // }
 
               updateTree(d, d.children, 0, 0);
           }
@@ -253,17 +263,16 @@ export default class LandingController {
           }
 
           //Get list of d attributes, for now 3 presets, will be fixed by next push
-          var axisData = [{"name": "subClassOf", "parent": d.name, "_children": d._children, "nodeType": 2}, {"name": "~isDefinedBy", "parent": d.name, "_children": d._children, "nodeType": 3}, {"name": "~subClassOf", "parent": d.name, "_children": d._children, "nodeType": 4}];
+          var axisData = [
+            {"depth": d.depth + 1, "id": "subClassOf", "lbl": "subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 2},
+            {"depth": d.depth + 1, "id": "~isDefinedBy", "lbl": "~isDefinedBy", "parent": d.lbl, "_children": d._children, "nodeType": 3},
+            {"depth": d.depth + 1, "id": "~subClassOf", "lbl": "~subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 4}];
 
           //d._children = axisData;
           d.children = axisData;
           updateTree(currentNode, axisData, 0, 0);
       }
 
-  }
-
-  getExpansionData(d) {
-    console.log('getExpansionData', d);
   }
 }
 

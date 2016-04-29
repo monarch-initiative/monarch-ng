@@ -14,10 +14,11 @@ export default class LandingController {
     this.$rootScope = $rootScope;
     this.model = null;
     this.neighbors = [];
-    var i = 0;
+    var color = {'subClassOf':'#FF4646','~subClassOf':'#992A2A','isDefinedBy':'#00FF00','~isDefinedBy':'#005B00','equivalentClass':'#5BCBB6','~equivalentClass':'#2D655B','sameAs':'#774177','subPropertyOf':'#FFC04C','!subPropertyOf':'#A47B30','equivalentProperty':'#6666FF','~equivalentProperty':'#3D3D99','property':'#FF7032','~property':'#CC3D00','type':'#B2FFFF','~type':'#EDD95D','operand':'#000000'};
     var duration = 750;
     var root;
     var currentNode;
+    var currentColor;
 
     var d3 = global.d3;
 
@@ -73,7 +74,7 @@ export default class LandingController {
 
           //Let it know it has children
           root._children = root.subClassOf;
-          updateTree(root, null, 0, 0);
+          updateTree(root, null, 0);
 
           d3.select(self.frameElement).style("height", "800px");
       }
@@ -98,11 +99,9 @@ export default class LandingController {
             });
       }
 
-      //Tree layout unable to differentiate between groups of children, so I'm passing them in
-      function updateTree(source, children, type, axis) {
+      //Tree layout unable to differentiate between groups of children, so we're passing them in
+      function updateTree(source, children, axis) {
           source.children = children;
-
-          var color = ['#ccc', '#ccc', 'red', 'green'];
 
           // Compute the new tree layout.
           var nodes = tree.nodes(root).reverse(),
@@ -181,7 +180,10 @@ export default class LandingController {
                   return diagonal({source: o, target: o});
               })
               .style("stroke", function(d){
-                  return axis ? color[type] : color[d.target.nodeType - 1];
+                  if(!axis){
+                      currentColor = color[d.target.id];
+                  }
+                  return currentColor;
               });
 
           // Transition links to their new position.
@@ -220,57 +222,49 @@ export default class LandingController {
 
           if(d.nodeType > 1){
 
-              //Temporarily hardcoded relationships, will be fixed by next push
-              if(d.lbl == "subClassOf"){
-                  d.parent.children = d.parent.subClassOf;
-              }else if(d.lbl == "~isDefinedBy"){
-                  d.parent.children = d.parent['~isDefinedBy'];
-              }else if(d.lbl == "~subClassOf"){
-                  d.parent.children = d.parent['~subClassOf'];
-              }
-
+              d.parent.children = d.parent[d.id];
               d.parent._children = null;
+              currentColor = color[d.id];
 
-              updateTree(d.parent, d.parent.children, d.nodeType - 1, 1);
+              updateTree(d.parent, d.parent.children, 1);
           }
           else if (d.children) {
               d._children = d.children;
               d.children = null;
 
-              updateTree(d, d.children, 0, 0);
+              updateTree(d, d.children, 0);
           } else {
-              //To not mess up formatting of JSON, don't pass root in again
-              // if (d != root){
               sciCall(d);
-              // }else
-              // {
-              //     d.children = [
-              //     {"level": d.level + 1, "name": "subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 2, "id": "subClassOf", "lbl": "subClassOf"},
-              //     {"level": d.level + 1, "name": "~isDefinedBy", "parent": d.lbl, "_children": d._children, "nodeType": 3, "id": "~isDefinedBy", "lbl": "~isDefinedBy"},
-              //     {"level": d.level + 1, "name": "~subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 4, "id": "~subClassOf", "lbl": "~subClassOf"}];
-              // }
 
-              updateTree(d, d.children, 0, 0);
+              updateTree(d, d.children, 0);
           }
       }
 
       function moveOn(d){
 
+          var axisData = [];
+
           for (var key in d) {
               if (d.hasOwnProperty(key)) {
                 currentNode[key] = d[key];
+
+                if(Array.isArray(d[key])){
+                    var toPush = {
+                        "depth": d.depth + 1,
+                        "id": key,
+                        "lbl": "",
+                        "parent": d.lbl,
+                        "children": d._children,
+                        "nodeType": 2
+                    };
+                    axisData.push(toPush);
+                }
               }
           }
 
-          //Get list of d attributes, for now 3 presets, will be fixed by next push
-          var axisData = [
-            {"depth": d.depth + 1, "id": "subClassOf", "lbl": "subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 2},
-            {"depth": d.depth + 1, "id": "~isDefinedBy", "lbl": "~isDefinedBy", "parent": d.lbl, "_children": d._children, "nodeType": 3},
-            {"depth": d.depth + 1, "id": "~subClassOf", "lbl": "~subClassOf", "parent": d.lbl, "_children": d._children, "nodeType": 4}];
-
           //d._children = axisData;
           d.children = axisData;
-          updateTree(currentNode, axisData, 0, 0);
+          updateTree(currentNode, axisData, 0);
       }
 
   }

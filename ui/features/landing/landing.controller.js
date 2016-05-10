@@ -1,4 +1,5 @@
 
+
 /* eslint-disable */
 
 
@@ -14,7 +15,23 @@ export default class LandingController {
     this.$rootScope = $rootScope;
     this.model = null;
     this.neighbors = [];
-    var color = {'subClassOf':'#FF4646','~subClassOf':'#992A2A','isDefinedBy':'#00FF00','~isDefinedBy':'#005B00','equivalentClass':'#5BCBB6','~equivalentClass':'#2D655B','sameAs':'#774177','subPropertyOf':'#FFC04C','!subPropertyOf':'#A47B30','equivalentProperty':'#6666FF','~equivalentProperty':'#3D3D99','property':'#FF7032','~property':'#CC3D00','type':'#B2FFFF','~type':'#EDD95D','operand':'#000000'};
+    var color = {
+        'subClassOf':'#FF4646',
+        '~subClassOf':'#992A2A',
+        'isDefinedBy':'#00FF00',
+        '~isDefinedBy':'#005B00',
+        'equivalentClass':'#5BCBB6',
+        '~equivalentClass':'#2D655B',
+        'sameAs':'#774177',
+        'subPropertyOf':'#FFC04C',
+        '!subPropertyOf':'#A47B30',
+        'equivalentProperty':'#6666FF',
+        '~equivalentProperty':'#3D3D99',
+        'property':'#FF7032',
+        '~property':'#CC3D00',
+        'type':'#B2FFFF',
+        '~type':'#EDD95D',
+        'operand':'#000000'};
     var duration = 750;
     var root;
     var currentNode;
@@ -23,10 +40,8 @@ export default class LandingController {
     var d3 = global.d3;
 
     var margin = {top: 20, right: 120, bottom: 20, left: 20},
-        width = 960 - margin.right - margin.left,
+        width = 180,
         height = 800 - margin.top - margin.bottom;
-
-
 
     var tree = d3.layout.tree()
         .size([height, width]);
@@ -38,9 +53,13 @@ export default class LandingController {
 
     var svg = d3.select("#ObOne").append("svg")
         .attr("width", width + margin.right + margin.left)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
+        .attr("height", height + margin.top + margin.bottom);
+
+    var graphDraw = svg.append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    var divScroll = document.getElementById("outerOB");
 
     // http://wafi.iit.cnr.it/webvis/tmp/dbpedia/realOntology.json
 
@@ -72,7 +91,7 @@ export default class LandingController {
           root.lbl = 'Disease of anatomical entity';
           root.depth = 0;
 
-          //Let it know it has children
+          // Let it know it has children
           root._children = root.subClassOf;
           updateTree(root, null, 0);
 
@@ -99,7 +118,7 @@ export default class LandingController {
             });
       }
 
-      //Tree layout unable to differentiate between groups of children, so we're passing them in
+      // Tree layout unable to differentiate between groups of children, so we're passing them in
       function updateTree(source, children, axis) {
           source.children = children;
 
@@ -108,10 +127,12 @@ export default class LandingController {
               links = tree.links(nodes);
 
           // Normalize for fixed-depth.
-          nodes.forEach(function(d) { d.y = d.depth * 200; });
+          nodes.forEach(function(d) {
+              d.y = d.depth * 200;
+          });
 
           // Update the nodes…
-          var node = svg.selectAll("g.node")
+          var node = graphDraw.selectAll("g.node")
               .data(nodes, function(d) {
                 return d.id + '.' + d.depth;
               });
@@ -119,18 +140,30 @@ export default class LandingController {
           // Enter any new nodes at the parent's previous position.
           var nodeEnter = node.enter().append("g")
               .attr("class", "node")
-              .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+              .attr("transform", function(d) {
+                  if (d.y + 100 > width) {
+                    width = d.y + 200;
+                    svg.attr("width", width);
+                    divScroll.scrollLeft = divScroll.scrollWidth;
+                  }
+                  return "translate(" + source.y0 + "," + source.x0 + ")";
+              })
               .on("click", nodeClick);
 
           nodeEnter.append("circle")
               .attr("r", 1e-6)
-              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+              .style("fill", function(d) {
+                  return d._children ? "lightsteelblue" : "#fff";
+              });
 
           nodeEnter.append("text")
               .attr("x", function(d) {
-                return 10; })             // (d.children || d._children) ? -10 : 10; })
+                return 10;  // (d.children || d._children) ? -10 : 10; })
+              })
               .attr("dy", ".35em")
-              .attr("text-anchor", function(d) { return "start"; })  // (d.children || d._children) ? "end" : "start"; })
+              .attr("text-anchor", function(d) {
+                  return "start";   // (d.children || d._children) ? "end" : "start"; })
+              })
               .text(function(d) {
                 var lbl = d.id + ' ' + d.lbl;
                 return lbl.substr(0, 30);
@@ -140,7 +173,9 @@ export default class LandingController {
           // Transition nodes to their new position.
           var nodeUpdate = node.transition()
               .duration(duration)
-              .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+              .attr("transform", function(d) {
+                  return "translate(" + d.y + "," + d.x + ")";
+              });
 
           nodeUpdate.select("circle")
               .attr("r", 4.5)
@@ -153,7 +188,9 @@ export default class LandingController {
           // Transition exiting nodes to the parent's new position.
           var nodeExit = node.exit().transition()
               .duration(duration)
-              .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+              .attr("transform", function(d) {
+                  return "translate(" + source.y + "," + source.x + ")";
+              })
               .remove();
 
           nodeExit.select("circle")
@@ -163,9 +200,10 @@ export default class LandingController {
               .style("fill-opacity", 1e-6);
 
           // Update the links…
-          var link = svg.selectAll("path.link")
+          var link = graphDraw.selectAll("path.link")
               .data(links, function(d) {
-                return d.target.id + '.' + d.target.depth; });
+                return d.target.id + '.' + d.target.depth;
+              });
 
           link.text(function(d) {
             var lbl = d.id + ' ' + d.lbl;
@@ -180,7 +218,7 @@ export default class LandingController {
                   return diagonal({source: o, target: o});
               })
               .style("stroke", function(d){
-                  if(!axis){
+                  if (!axis) {
                       currentColor = color[d.target.id];
                   }
                   return currentColor;
@@ -220,7 +258,7 @@ export default class LandingController {
       function nodeClick(d) {
           currentNode = d;
 
-          if(d.nodeType > 1){
+          if (d.nodeType > 1) {
 
               d.parent.children = d.parent[d.id];
               d.parent._children = null;
@@ -248,7 +286,7 @@ export default class LandingController {
               if (d.hasOwnProperty(key)) {
                 currentNode[key] = d[key];
 
-                if(Array.isArray(d[key])){
+                if (Array.isArray(d[key])) {
                     var toPush = {
                         "depth": d.depth + 1,
                         "id": key,
@@ -262,7 +300,7 @@ export default class LandingController {
               }
           }
 
-          //d._children = axisData;
+          // d._children = axisData;
           d.children = axisData;
           updateTree(currentNode, axisData, 0);
       }

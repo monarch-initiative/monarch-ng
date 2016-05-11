@@ -19,9 +19,6 @@ var axios = Axios.create({
 
 var batch = require('./batch');
 
-// var isNodeJS = new Function("try {return this===global;}catch(e){return false;}"); /* eslint no-new-func: 0 */
-// isNodeJS = isNodeJS();
-
 function captureStackTrace(error, ctor) {
   var container = new Error();
   console.log('CST error:', error);

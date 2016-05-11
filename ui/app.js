@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 // require('offline-plugin/runtime').install();
 
 // import wreck from 'wreck';

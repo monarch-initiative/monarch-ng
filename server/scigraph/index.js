@@ -1,5 +1,4 @@
 'use strict';
-/* eslint no-undefined: 0 */
 
 var Router = require('falcor-router');
 // var Promise = require('promise');

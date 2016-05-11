@@ -17,7 +17,6 @@ class SciGraphService {
     // var service = {};
     // service.service = this;
     this.service = this;
-    /* eslint func-style: 0 */
 
     if (useBrowserService) {
       scigraphRouterFactory('APIKey', null, function(scigraphRouterInstance) {

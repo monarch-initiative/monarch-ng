@@ -287,11 +287,19 @@ export default class LandingController {
     this.currentNode = d;
 
     if (d.nodeType > 1) {
-      d.parent.children = d.parent[d.id];
-      d.parent._children = null;
-      this.currentColor = this.color[d.id];
+      if (d.children) {
+        d.parent._children = d.children;
+        d.parent.children = null;
+        this.updateTree(d.parent, d.parent.children, 1);
+      }
+      else {
+        d.parent.children = [d];
+        d.children = d.parent[d.id];
+        d._children = null;
+        this.currentColor = this.color[d.id];
 
-      this.updateTree(d.parent, d.parent.children, 1);
+        this.updateTree(d, d.children, 1);
+      }
     }
     else if (d.children) {
       d._children = d.children;

@@ -2,7 +2,17 @@
 
   <div class="row">
     <h3>{{landing.title}}</h3>
-    <div class="well well-sm">
+    <div class="container" ng-controller="TypeaheadCtrl">
+        <h3>{{landing.path}}</h3>
+        <input
+                type="text"
+                id="searchBox"
+                ng-model="searchSelect"
+                placeholder="Search for node"
+                uib-typeahead="node as node.id for node in currentNodes | filter:{name:$viewValue} | limitTo:5"
+                typeahead-no-results="noResults" class="form-control">
+    </div>
+      <div class="well well-sm">
       <div id="outerOB">
         <div id="ObOne">
         </div>
